@@ -43,9 +43,16 @@ under a couple of zones when touching it, e.g. `TZ=Pacific/Auckland npm test`.
   - All-day `end.date` is **exclusive** (a one-day event on the 5th ends on the 6th).
   - Timed events ending exactly at local midnight don't occupy the next day on the grid; the
     editor still shows the real end date so an unchanged save round-trips.
-  - Updates are full replacements (`PUT`), so `draftToEventBody` spreads the original event to keep
-    fields the editor doesn't know about (attendees, reminders, conference data…). `PATCH` would
-    merge `start.date` with `start.dateTime` when switching all-day ↔ timed and be rejected.
+  - Timed events are edited **in the event's own zones** (`start.timeZone`, `end.timeZone`), not
+    the browser's, and written back in them — otherwise a save shifts the event in time. The grid
+    itself places events on the viewer's local days.
+  - Updates are full replacements (`PUT`). `useYearData.save` first GETs the event fresh, then
+    `applyDraft` applies only the fields changed in the editor on top of it and sends `If-Match`
+    with its etag — so fields the editor doesn't show (attendees, reminders, conference data…) and
+    edits made elsewhere since the grid loaded are kept. `PATCH` would merge `start.date` with
+    `start.dateTime` when switching all-day ↔ timed and be rejected.
+  - Only plain events (`eventType` default) are editable; birthdays, out-of-office, working
+    location etc. are view-only here.
 - `lib/layout.ts` — greedy lane assignment across the whole year, so an event keeps its lane in
   every month row it touches; each month row is only as tall as its own events need.
 - `lib/backend.ts` — the `Backend` interface. `lib/google.ts` implements it against the API (401 →
@@ -55,8 +62,11 @@ under a couple of zones when touching it, e.g. `TZ=Pacific/Auckland npm test`.
   Holds the calendar list, the selected calendar IDs, and one cache entry per year.
 - `useYearData.ts` — all state. Shows the cached year first, then refreshes from Google. Events in
   memory are tagged with their year and a `fresh` flag so a slow cache read can't overwrite newer
-  network data and a fetch never merges into another year. Edits are **not queued offline**: the
-  UI is read-only offline, and the cache is only ever updated from the API's response.
+  network data and a fetch never merges into another year. A fetch that overlaps a local edit
+  (`editsRef`) is redone so it can't revert the edit. A 401 that can't be renewed silently flips
+  the UI to signed-out. Edits are **not queued offline**: the UI is read-only offline, and the
+  cache is only ever updated from the API's response. Sign out sets a flag so the next launch
+  doesn't silently sign back in.
 - `components/YearGrid.tsx` — rendering, plus click/drag-to-create. The drag ref is written
   synchronously because the last `mouseenter` and the `mouseup` can land before a re-render.
 
@@ -64,6 +74,7 @@ under a couple of zones when touching it, e.g. `TZ=Pacific/Auckland npm test`.
 
 - Scopes: `calendar.calendarlist.readonly` (list calendars) and `calendar.events` (read/write
   events). Don't widen to `calendar` without a reason — it also grants calendar settings and ACLs.
+- Changes don't set `sendUpdates`, so guests of an event aren't emailed when it's edited.
 - `events.list` uses `singleEvents=true`, so recurring events arrive as instances; editing one
   edits only that instance. Moving an instance to another calendar isn't supported by the API, so
   the editor disables the calendar picker for instances.

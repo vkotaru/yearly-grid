@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { dayNum, dayOfWeek, isoFromDayNum } from './dates';
-import { draftFromGridEvent, draftToEventBody, newDraft, toGridEvent, validateDraft } from './events';
+import { applyDraft, draftFromGridEvent, draftToEventBody, newDraft, toGridEvent, validateDraft } from './events';
 import { layoutYear, monthSegments } from './layout';
 import type { GCalendar, GEvent, GridEvent } from './types';
 
@@ -46,18 +46,48 @@ describe('toGridEvent', () => {
 });
 
 describe('drafts', () => {
-  it('round-trips an all-day event through the editor', () => {
-    const ev = allDay('a', '2026-07-01', '2026-07-04');
-    const draft = draftFromGridEvent(toGridEvent(ev, cal)!);
-    const body = draftToEventBody(draft, 'UTC', ev);
-    expect(body.start).toEqual({ date: '2026-07-01' });
-    expect(body.end).toEqual({ date: '2026-07-04' });
+  it('an untouched save changes nothing, for all-day and timed events', () => {
+    const events: GEvent[] = [
+      allDay('a', '2026-07-01', '2026-07-04'),
+      // An event in another zone than the browser (whatever TZ the tests run in).
+      { id: 'p', start: { dateTime: '2026-03-05T10:00:00+01:00', timeZone: 'Europe/Paris' },
+        end: { dateTime: '2026-03-05T11:30:00+01:00', timeZone: 'Europe/Paris' } },
+    ];
+    for (const ev of events) {
+      const draft = draftFromGridEvent(toGridEvent(ev, cal)!);
+      expect(applyDraft(ev, draft, { ...draft }, 'UTC')).toEqual(ev);
+    }
   });
 
-  it('keeps unknown fields of the base event on update', () => {
-    const ev = { ...allDay('a', '2026-07-01', '2026-07-02'), attendees: [{ email: 'x@example.com' }] };
-    const body = draftToEventBody(draftFromGridEvent(toGridEvent(ev, cal)!), 'UTC', ev);
+  it('edits timed events in their own zone, not the browser zone', () => {
+    const ev: GEvent = { id: 'p', start: { dateTime: '2026-03-05T10:00:00+01:00', timeZone: 'Europe/Paris' },
+      end: { dateTime: '2026-03-05T11:00:00+01:00', timeZone: 'Europe/Paris' } };
+    const draft = draftFromGridEvent(toGridEvent(ev, cal)!);
+    expect([draft.startTime, draft.endTime, draft.startZone]).toEqual(['10:00', '11:00', 'Europe/Paris']);
+    const body = applyDraft(ev, draft, { ...draft, endTime: '12:00' }, 'America/Los_Angeles');
+    expect(body.start).toEqual({ dateTime: '2026-03-05T10:00:00', timeZone: 'Europe/Paris' });
+    expect(body.end).toEqual({ dateTime: '2026-03-05T12:00:00', timeZone: 'Europe/Paris' });
+  });
+
+  it('keeps separate start and end zones (e.g. a flight)', () => {
+    const ev: GEvent = { id: 'f', start: { dateTime: '2026-06-01T08:00:00-07:00', timeZone: 'America/Los_Angeles' },
+      end: { dateTime: '2026-06-01T16:30:00-04:00', timeZone: 'America/New_York' } };
+    const draft = draftFromGridEvent(toGridEvent(ev, cal)!);
+    expect([draft.startTime, draft.endTime]).toEqual(['08:00', '16:30']);
+    const body = applyDraft(ev, draft, { ...draft, startTime: '09:00' }, 'UTC');
+    expect(body.end).toEqual({ dateTime: '2026-06-01T16:30:00', timeZone: 'America/New_York' });
+  });
+
+  it('applies only edited fields on top of the fresh event', () => {
+    const cached = allDay('a', '2026-07-01', '2026-07-02');
+    const initial = draftFromGridEvent(toGridEvent(cached, cal)!);
+    // Since the grid loaded, someone changed the description and added a guest.
+    const fresh: GEvent = { ...cached, description: 'new notes', attendees: [{ email: 'x@example.com' }], etag: '"2"' };
+    const body = applyDraft(fresh, initial, { ...initial, title: 'Renamed' }, 'UTC');
+    expect(body.summary).toBe('Renamed');
+    expect(body.description).toBe('new notes');
     expect(body.attendees).toEqual([{ email: 'x@example.com' }]);
+    expect(body.start).toEqual(fresh.start);
   });
 
   it('builds timed bodies in the given zone and validates ranges', () => {

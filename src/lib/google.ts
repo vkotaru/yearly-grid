@@ -84,16 +84,21 @@ export const googleBackend: Backend = {
     });
   },
 
+  getEvent(calendarId, eventId) {
+    return api<GEvent>(`${cal(calendarId)}/events/${encodeURIComponent(eventId)}`);
+  },
+
   createEvent(calendarId, body) {
     return api<GEvent>(`${cal(calendarId)}/events`, { method: 'POST', body: JSON.stringify(body) });
   },
 
-  updateEvent(calendarId, eventId, body) {
+  updateEvent(calendarId, eventId, body, etag) {
     // PUT, not PATCH: switching all-day ↔ timed must replace start/end whole,
     // and PATCH would merge `date` and `dateTime` into an invalid pair.
     return api<GEvent>(`${cal(calendarId)}/events/${encodeURIComponent(eventId)}`, {
       method: 'PUT',
       body: JSON.stringify(body),
+      headers: etag ? { 'If-Match': etag } : undefined,
     });
   },
 

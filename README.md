@@ -13,7 +13,7 @@ A Chrome extension that shows your whole Google Calendar year on one 12 × 31 gr
 
 ## 🚀 Install (from source)
 
-You need Node 20+, Google Chrome, and a Google Cloud project for the OAuth client (free).
+You need Node 20+, Google Chrome 116+, and a Google Cloud project for the OAuth client (free).
 
 ### 1. Pin the extension ID
 
@@ -74,3 +74,6 @@ Calendar data goes only between your browser and Google. Nothing is sent anywher
 - Editing needs a connection; offline, the grid is view-only.
 - Editing one occurrence of a repeating event changes only that occurrence, and it can't be moved to another calendar.
 - Attendees, reminders, location and other fields aren't editable here (they're kept unchanged on save) — use "Open in Google Calendar" for those.
+- Guests aren't emailed when you change a meeting here.
+- Birthdays, out-of-office, focus time and working-location entries are view-only.
+- Timed events are edited in their own time zone; the editor says so when it differs from yours.

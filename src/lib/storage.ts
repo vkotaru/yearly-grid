@@ -37,6 +37,10 @@ export const storage = {
   getCalendars: () => get<GCalendar[]>('calendars'),
   setCalendars: (cals: GCalendar[]) => set('calendars', cals),
 
+  /** Set by "Sign out" so the next launch doesn't silently sign back in. */
+  getSignedOut: async () => Boolean(await get<boolean>('signedOut')),
+  setSignedOut: (value: boolean) => set('signedOut', value),
+
   getYear: (year: number) => get<YearCache>(`year:${year}`),
   setYear: (year: number, cache: YearCache) => set(`year:${year}`, cache),
 };

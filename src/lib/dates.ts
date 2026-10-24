@@ -54,4 +54,19 @@ export function hhmm(date: Date): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
+/**
+ * Calendar day and 'HH:MM' of an RFC 3339 instant as seen in `timeZone`
+ * (an IANA name), or in the local zone when it's omitted.
+ */
+export function zonedParts(dateTime: string, timeZone?: string): { day: number; time: string } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(new Date(dateTime));
+  const get = (type: string) => Number(parts.find((p) => p.type === type)!.value);
+  const time = `${String(get('hour')).padStart(2, '0')}:${String(get('minute')).padStart(2, '0')}`;
+  return { day: dayNum(get('year'), get('month'), get('day')), time };
+}
+
 export const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

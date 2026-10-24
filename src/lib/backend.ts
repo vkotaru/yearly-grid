@@ -8,8 +8,10 @@ export interface Backend {
   signOut(): Promise<void>;
   listCalendars(): Promise<GCalendar[]>;
   listEvents(calendarId: string, year: number): Promise<GEvent[]>;
+  getEvent(calendarId: string, eventId: string): Promise<GEvent>;
   createEvent(calendarId: string, body: Partial<GEvent>): Promise<GEvent>;
-  updateEvent(calendarId: string, eventId: string, body: Partial<GEvent>): Promise<GEvent>;
+  /** Full replacement. With `etag`, fails with 412 if the event changed since it was read. */
+  updateEvent(calendarId: string, eventId: string, body: Partial<GEvent>, etag?: string): Promise<GEvent>;
   moveEvent(fromCalendarId: string, eventId: string, toCalendarId: string): Promise<GEvent>;
   deleteEvent(calendarId: string, eventId: string): Promise<void>;
 }

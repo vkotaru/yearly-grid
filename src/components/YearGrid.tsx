@@ -98,7 +98,8 @@ export default function YearGrid({ year, events, editable, onCreate, onOpen }: P
                     className={cls}
                     title={WEEKDAY.format(new Date(year, i, d))}
                     onMouseDown={editable ? (e) => { if (e.button === 0) setDrag({ anchor: n, current: n }); } : undefined}
-                    onMouseEnter={drag ? () => setDrag({ ...dragRef.current!, current: n }) : undefined}
+                    // No button held: the mouseup happened outside the window, so the drag is over.
+                    onMouseEnter={drag ? (e) => setDrag(e.buttons === 0 ? null : { ...dragRef.current!, current: n }) : undefined}
                   />
                 );
               })}

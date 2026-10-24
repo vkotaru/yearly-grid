@@ -1,4 +1,4 @@
-import { dayNumFromDate, dayNumFromIso, hhmm, isoFromDayNum } from './dates';
+import { dayNumFromDate, dayNumFromIso, hhmm, isoFromDayNum, zonedParts } from './dates';
 import type { GCalendar, GEvent, GridEvent } from './types';
 
 // Google's fixed event palette (colorId → background). These are the colours
@@ -61,6 +61,12 @@ export interface Draft {
   endDay: number;
   startTime: string;
   endTime: string;
+  /**
+   * IANA zones the start/end times are expressed in — the event's own zones,
+   * so a save never shifts the instant. Undefined means the browser's zone.
+   */
+  startZone?: string;
+  endZone?: string;
 }
 
 export function newDraft(calendarId: string, startDay: number, endDay: number): Draft {
@@ -78,45 +84,71 @@ export function newDraft(calendarId: string, startDay: number, endDay: number): 
 
 export function draftFromGridEvent(g: GridEvent): Draft {
   const ev = g.event;
-  const startTime = ev.start.dateTime ? hhmm(new Date(ev.start.dateTime)) : '09:00';
-  const endTime = ev.end?.dateTime ? hhmm(new Date(ev.end.dateTime)) : '10:00';
-  return {
+  const draft: Draft = {
     calendarId: g.calendarId,
     title: ev.summary || '',
     description: ev.description || '',
     allDay: g.allDay,
     startDay: g.startDay,
-    // For timed events the editor shows the real end date, not the grid's
-    // midnight-adjusted one, so a save round-trips unchanged.
-    endDay: ev.end?.dateTime ? dayNumFromDate(new Date(ev.end.dateTime)) : g.endDay,
-    startTime,
-    endTime,
+    endDay: g.endDay,
+    startTime: '09:00',
+    endTime: '10:00',
   };
+  if (ev.start.dateTime) {
+    // Read times in the event's own zone (not the browser's): the body is
+    // written back in that zone, so this keeps an unchanged save a no-op. The
+    // end date is the real one, not the grid's midnight-adjusted day.
+    draft.startZone = ev.start.timeZone;
+    draft.endZone = ev.end?.timeZone ?? ev.start.timeZone;
+    const start = zonedParts(ev.start.dateTime, draft.startZone);
+    const end = zonedParts(ev.end?.dateTime ?? ev.start.dateTime, draft.endZone);
+    Object.assign(draft, { startDay: start.day, startTime: start.time, endDay: end.day, endTime: end.time });
+  }
+  return draft;
 }
 
 /** Returns an error message, or null if the draft can be saved. */
 export function validateDraft(d: Draft): string | null {
   if (d.endDay < d.startDay) return 'End date is before the start date.';
-  if (!d.allDay && d.endDay === d.startDay && d.endTime <= d.startTime) {
+  if (!d.allDay && d.endDay === d.startDay && d.endTime <= d.startTime && (d.endZone ?? d.startZone) === d.startZone) {
     return 'End time must be after the start time.';
   }
   return null;
 }
 
-/**
- * Draft → Google event body. With `base`, the existing event's other fields
- * (attendees, reminders, recurrence links, …) are preserved, since updates are
- * sent as full replacements.
- */
-export function draftToEventBody(d: Draft, timeZone: string, base?: GEvent): Partial<GEvent> {
-  const body: Partial<GEvent> = { ...(base ?? {}), summary: d.title, description: d.description };
+function draftTimes(d: Draft, timeZone: string): Pick<GEvent, 'start' | 'end'> {
   if (d.allDay) {
-    body.start = { date: isoFromDayNum(d.startDay) };
-    body.end = { date: isoFromDayNum(d.endDay + 1) };
-  } else {
-    const tz = base?.start.timeZone || timeZone;
-    body.start = { dateTime: `${isoFromDayNum(d.startDay)}T${d.startTime}:00`, timeZone: tz };
-    body.end = { dateTime: `${isoFromDayNum(d.endDay)}T${d.endTime}:00`, timeZone: tz };
+    return { start: { date: isoFromDayNum(d.startDay) }, end: { date: isoFromDayNum(d.endDay + 1) } };
   }
+  const startZone = d.startZone || timeZone;
+  return {
+    start: { dateTime: `${isoFromDayNum(d.startDay)}T${d.startTime}:00`, timeZone: startZone },
+    end: { dateTime: `${isoFromDayNum(d.endDay)}T${d.endTime}:00`, timeZone: d.endZone || startZone },
+  };
+}
+
+/** Body for a new event. */
+export function draftToEventBody(d: Draft, timeZone: string): Partial<GEvent> {
+  return { summary: d.title, description: d.description, ...draftTimes(d, timeZone) };
+}
+
+/**
+ * Body for updating `fresh` (the event as Google has it right now). Only the
+ * fields the user changed between `initial` and `draft` are applied, so edits
+ * made elsewhere since the grid was loaded survive. Everything else in `fresh`
+ * (attendees, reminders, …) is kept, since updates are full replacements.
+ */
+export function applyDraft(fresh: GEvent, initial: Draft, draft: Draft, timeZone: string): GEvent {
+  const body: GEvent = { ...fresh };
+  if (draft.title !== initial.title) body.summary = draft.title;
+  if (draft.description !== initial.description) body.description = draft.description;
+  const timesChanged = (['allDay', 'startDay', 'endDay', 'startTime', 'endTime'] as const)
+    .some((k) => draft[k] !== initial[k]);
+  if (timesChanged) Object.assign(body, draftTimes(draft, timeZone));
   return body;
+}
+
+/** Google event types other than plain events can't be edited through the API like normal events. */
+export function isPlainEvent(ev: GEvent): boolean {
+  return !ev.eventType || ev.eventType === 'default';
 }

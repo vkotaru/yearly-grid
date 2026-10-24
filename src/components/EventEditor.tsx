@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { dayNumFromIso, isoFromDayNum } from '../lib/dates';
-import { validateDraft, type Draft } from '../lib/events';
+import { isPlainEvent, validateDraft, type Draft } from '../lib/events';
 import { calendarName, canEdit, type GCalendar, type GridEvent } from '../lib/types';
 import styles from './EventEditor.module.css';
 
@@ -23,7 +23,10 @@ export default function EventEditor({ initial, existing, calendars, canWrite, on
   const titleRef = useRef<HTMLInputElement>(null);
 
   const calendar = calendars.find((c) => c.id === draft.calendarId);
-  const editable = canWrite && (calendar ? canEdit(calendar) : false);
+  const plain = !existing || isPlainEvent(existing.event);
+  const editable = canWrite && plain && (calendar ? canEdit(calendar) : false);
+  const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const zones = [...new Set([draft.startZone, draft.endZone].filter((z): z is string => Boolean(z) && z !== localZone))];
   const writable = calendars.filter(canEdit);
   const isRecurring = Boolean(existing?.event.recurringEventId);
 
@@ -134,9 +137,11 @@ export default function EventEditor({ initial, existing, calendars, canWrite, on
           disabled={!editable || busy}
         />
 
+        {!draft.allDay && zones.length > 0 && <p className={styles.note}>Times are in {zones.join(' → ')}.</p>}
+        {!plain && <p className={styles.note}>This kind of event ({existing!.event.eventType}) can only be edited in Google Calendar.</p>}
         {isRecurring && <p className={styles.note}>Repeating event — changes apply to this occurrence only.</p>}
         {!canWrite && <p className={styles.note}>Offline or signed out — editing is unavailable.</p>}
-        {canWrite && calendar && !canEdit(calendar) && <p className={styles.note}>You can view but not edit this calendar.</p>}
+        {canWrite && plain && calendar && !canEdit(calendar) && <p className={styles.note}>You can view but not edit this calendar.</p>}
         {error && <p className={styles.error} role="alert">{error}</p>}
 
         <div className={styles.actions}>

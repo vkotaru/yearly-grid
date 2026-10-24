@@ -1,7 +1,7 @@
 // In-memory stand-in for Google, used by `npm run dev` outside the extension.
 // Lets the whole UI (including edits) be exercised without OAuth setup.
 
-import type { Backend } from './backend';
+import { ApiError, type Backend } from './backend';
 import { dayNum, dayOfWeek, isoFromDayNum } from './dates';
 import type { GCalendar, GEvent } from './types';
 
@@ -84,6 +84,13 @@ export const mockBackend: Backend = {
       const end = (e.end.date ?? e.end.dateTime!).slice(0, 10);
       return end > yStart && start < yEnd;
     });
+  },
+
+  async getEvent(calendarId, eventId) {
+    await delay();
+    const ev = store.get(calendarId)?.get(eventId);
+    if (!ev) throw new ApiError(404, 'Not Found');
+    return ev;
   },
 
   async createEvent(calendarId, body) {

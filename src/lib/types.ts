@@ -30,6 +30,9 @@ export interface GEvent {
   htmlLink?: string;
   colorId?: string;
   recurringEventId?: string;
+  etag?: string;
+  /** 'default' for plain events; also 'birthday', 'outOfOffice', 'focusTime', 'workingLocation', 'fromGmail'. */
+  eventType?: string;
   start: GEventTime;
   end: GEventTime;
   // Other fields are kept as-is so a full update (PUT) doesn't drop them.
