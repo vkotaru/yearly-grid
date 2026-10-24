@@ -1,0 +1,152 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.dialog {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--surface-raised);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.title {
+  font: inherit;
+  font-size: 20px;
+  padding: 6px 2px;
+  border: none;
+  border-bottom: 2px solid var(--border-strong);
+  background: transparent;
+  color: var(--text);
+}
+
+.title:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.row > span {
+  width: 64px;
+  flex: none;
+  color: var(--text-muted);
+}
+
+.row select,
+.row input,
+.description {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  color-scheme: inherit;
+}
+
+.row select {
+  flex: 1;
+  min-width: 0;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding-left: 72px;
+}
+
+.dates {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.description {
+  resize: vertical;
+}
+
+.note,
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.link {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.primary,
+.ghost,
+.danger,
+.ghostDanger {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.ghostDanger {
+  background: transparent;
+  color: var(--danger);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

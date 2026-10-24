@@ -1,0 +1,185 @@
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: var(--header);
+  color: var(--on-header);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  flex: 1;
+}
+
+.yearNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.year {
+  font-size: 18px;
+  font-weight: 700;
+  min-width: 52px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.status {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.iconButton,
+.textButton {
+  font: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.iconButton {
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.textButton {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.iconButton:hover:not(:disabled),
+.textButton:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Banners ── */
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 16px;
+  font-size: 12px;
+  background: var(--banner);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.banner .textButton {
+  border-color: var(--border-strong);
+}
+
+.errorBanner {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* ── Layout ── */
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.sidebar {
+  width: 210px;
+  flex: none;
+  padding: 16px 12px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.hint {
+  margin: 20px 6px 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  /* No top padding: the sticky day header must sit flush with the scroll edge. */
+  padding: 0 16px 16px;
+}
+
+/* ── Signed-out screen ── */
+.signIn {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 16px;
+}
+
+.signIn h1 {
+  margin: 8px 0 0;
+  font-size: 24px;
+}
+
+.signIn p {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+}
+
+.primary {
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  cursor: pointer;
+}
+
+.errorText {
+  color: var(--danger) !important;
+  font-size: 13px;
+}
+
+/* Narrow windows: calendars stack above the grid instead of beside it. */
+@media (max-width: 720px) {
+  .body {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: auto;
+    max-height: 32vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
