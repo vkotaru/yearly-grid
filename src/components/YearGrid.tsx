@@ -23,7 +23,7 @@ interface Props {
 }
 
 export default function YearGrid({ year, events, editable, laneHeight, fontSize, onCreate, onOpen }: Props) {
-  const layout = useMemo(() => layoutYear(events, year, MIN_LANES), [events, year]);
+  const layout = useMemo(() => layoutYear(events, year, 0), [events, year]);
   const today = todayDayNum();
   const todayParts = fromDayNum(today);
 
@@ -98,7 +98,8 @@ export default function YearGrid({ year, events, editable, laneHeight, fontSize,
       {MONTH_NAMES.map((name, i) => {
         const month = i + 1;
         const dim = daysInMonth(year, month);
-        const lanes = layout.lanesByMonth[i];
+        // When editable, keep one free lane below the events so a full month still has empty days to click.
+        const lanes = Math.max(MIN_LANES, layout.lanesByMonth[i] + (editable ? 1 : 0));
         const segments = monthSegments(events, layout, year, month);
         const isCurrentMonth = year === todayParts.year && month === todayParts.month;
 
