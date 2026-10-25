@@ -20,9 +20,40 @@ export const ACCENT_COLORS = {
 export type Accent = keyof typeof ACCENT_COLORS;
 export const ACCENTS = Object.keys(ACCENT_COLORS) as Accent[];
 
+/**
+ * Font choices as stacks of fonts already on the user's machine (the first
+ * installed one wins), so nothing is downloaded. Stacks after modernfontstacks.com.
+ */
+export const FONTS = {
+  system: { label: 'System', stack: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
+  rounded: {
+    label: 'Rounded',
+    stack: "ui-rounded, 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Quicksand, Comfortaa, Manjari, 'Arial Rounded MT', 'Arial Rounded MT Bold', Calibri, sans-serif",
+  },
+  humanist: {
+    label: 'Humanist',
+    stack: "Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', 'Noto Sans', sans-serif",
+  },
+  geometric: {
+    label: 'Geometric',
+    stack: "Avenir, 'Avenir Next LT Pro', Montserrat, Corbel, 'URW Gothic', sans-serif",
+  },
+  serif: {
+    label: 'Serif',
+    stack: "ui-serif, 'New York', Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif",
+  },
+  mono: {
+    label: 'Mono',
+    stack: "ui-monospace, 'SF Mono', 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace",
+  },
+} as const;
+export type Font = keyof typeof FONTS;
+export const FONT_KEYS = Object.keys(FONTS) as Font[];
+
 export interface Settings {
   theme: Theme;
   accent: Accent;
+  font: Font;
   textSize: TextSize;
   eventFilter: EventFilter;
   sidebarOpen: boolean;
@@ -31,6 +62,7 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   accent: 'violet',
+  font: 'system',
   textSize: 'medium',
   eventFilter: 'all',
   sidebarOpen: true,
@@ -57,6 +89,7 @@ export function loadSettings(): Settings {
     const merged = { ...DEFAULT_SETTINGS, ...saved };
     // Drop values from an older version that no longer exist.
     if (!ACCENTS.includes(merged.accent)) merged.accent = DEFAULT_SETTINGS.accent;
+    if (!(merged.font in FONTS)) merged.font = DEFAULT_SETTINGS.font;
     if (!(merged.textSize in TEXT_SIZES)) merged.textSize = DEFAULT_SETTINGS.textSize;
     return merged;
   } catch {
@@ -72,7 +105,7 @@ export function saveSettings(s: Settings): void {
   }
 }
 
-/** Applies theme and accent to <html>, where index.css reads them. */
+/** Applies theme, accent and font to <html>, where index.css reads them. */
 export function applyTheme(s: Settings): void {
   const root = document.documentElement;
   if (s.theme === 'system') delete root.dataset.theme;
@@ -80,4 +113,5 @@ export function applyTheme(s: Settings): void {
   const [light, dark] = ACCENT_COLORS[s.accent];
   root.style.setProperty('--accent-light', light);
   root.style.setProperty('--accent-dark', dark);
+  root.style.setProperty('--font', FONTS[s.font].stack);
 }

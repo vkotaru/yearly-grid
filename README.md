@@ -6,7 +6,7 @@ A Chrome extension that shows your whole Google Calendar year on one 12 × 31 gr
 - **Peek without clicking**: rest the mouse on an event to see its full title, time, calendar, location and notes.
 - **Choose your calendars**: show or hide any calendar in your Google account; the choice is remembered.
 - **Edit in place**: click or drag across empty days to create an event, click an event to change its title, dates, times, description or calendar, or delete it. Changes go straight to Google Calendar.
-- **Your view, your way**: hide the calendar sidebar, pick light/dark/system theme, an accent colour and text size, and choose whether the grid shows everything, all-day plus multi-day events, or all-day events only (⚙ in the header).
+- **Your view, your way**: hide the calendar sidebar, pick light/dark/system theme, an accent colour, font and text size, and choose whether the grid shows everything, all-day plus multi-day events, or all-day events only (⚙ in the header).
 - **No server**: the extension talks to Google directly. The last synced year is cached on your machine, so the grid opens instantly and works offline (read-only while offline).
 
 > Inspired by the grid in [yearly.app](https://github.com/vkotaru/yearly.app).

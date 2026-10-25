@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ACCENT_COLORS, ACCENTS, type EventFilter, type Settings, type TextSize, type Theme } from '../lib/settings';
+import { ACCENT_COLORS, ACCENTS, FONT_KEYS, FONTS, type EventFilter, type Settings, type TextSize, type Theme } from '../lib/settings';
 import styles from './SettingsPanel.module.css';
 
 interface Props {
@@ -80,6 +80,25 @@ export default function SettingsPanel({ settings, onChange, onClose }: Props) {
               className={`${styles.swatch} ${settings.accent === a ? styles.on : ''}`}
               onClick={() => onChange({ accent: a })}
             />
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2>Font</h2>
+        <div className={styles.fonts} role="radiogroup" aria-label="Font">
+          {FONT_KEYS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              role="radio"
+              aria-checked={settings.font === f}
+              className={settings.font === f ? styles.on : undefined}
+              style={{ fontFamily: FONTS[f].stack }}
+              onClick={() => onChange({ font: f })}
+            >
+              {FONTS[f].label}
+            </button>
           ))}
         </div>
       </section>

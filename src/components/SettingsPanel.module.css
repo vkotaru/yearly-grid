@@ -5,6 +5,8 @@
   z-index: 20;
   width: 300px;
   max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -71,6 +73,33 @@
 
 .swatch.on {
   box-shadow: 0 0 0 2px var(--text);
+}
+
+/* ── Font: each button is previewed in its own font ── */
+.fonts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.fonts button {
+  font-size: 13px;
+  padding: 7px 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.fonts button:hover {
+  background: var(--hover);
+}
+
+.fonts button.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
 }
 
 /* ── Event filter ── */
