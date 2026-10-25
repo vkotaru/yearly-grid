@@ -6,9 +6,11 @@
 
 /* ── Header ── */
 .header {
+  position: relative;
+  z-index: 5;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   padding: 10px 16px;
   background: var(--header);
   color: var(--on-header);
@@ -74,6 +76,10 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
+.iconButton.active {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .iconButton:disabled {
   opacity: 0.4;
   cursor: default;
@@ -122,6 +128,16 @@
   font-size: 12px;
   color: var(--text-muted);
   line-height: 1.4;
+}
+
+.linkButton {
+  font: inherit;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .main {

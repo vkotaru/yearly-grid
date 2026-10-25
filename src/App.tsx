@@ -1,9 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import CalendarList from './components/CalendarList';
 import EventEditor from './components/EventEditor';
+import SettingsPanel from './components/SettingsPanel';
 import YearGrid from './components/YearGrid';
 import { isExtension, type Backend } from './lib/backend';
 import { draftFromGridEvent, newDraft, toGridEvent, type Draft } from './lib/events';
+import { applyTheme, loadSettings, passesFilter, saveSettings, TEXT_SIZES, type Settings } from './lib/settings';
 import { canEdit, type GridEvent } from './lib/types';
 import { useYearData } from './useYearData';
 import styles from './App.module.css';
@@ -24,20 +26,33 @@ export default function App({ backend }: { backend: Backend }) {
   const [year, setYear] = useState(() => new Date().getFullYear());
   const data = useYearData(backend, year);
   const [editing, setEditing] = useState<Editing | null>(null);
+  const [settings, setSettings] = useState(loadSettings);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    applyTheme(settings);
+    saveSettings(settings);
+  }, [settings]);
+
+  const updateSettings = useCallback((patch: Partial<Settings>) => setSettings((s) => ({ ...s, ...patch })), []);
+  const closeSettings = useCallback(() => setSettingsOpen(false), []);
 
   const canWrite = Boolean(data.signedIn) && data.online;
 
-  const gridEvents = useMemo(() => {
+  const { gridEvents, hidden } = useMemo(() => {
     const out: GridEvent[] = [];
+    let hidden = 0;
     for (const cal of data.calendars) {
       if (!data.selected.includes(cal.id)) continue;
       for (const ev of data.events[cal.id] ?? []) {
         const g = toGridEvent(ev, cal);
-        if (g) out.push(g);
+        if (!g) continue;
+        if (passesFilter(g, settings.eventFilter)) out.push(g);
+        else hidden++;
       }
     }
-    return out;
-  }, [data.calendars, data.selected, data.events]);
+    return { gridEvents: out, hidden };
+  }, [data.calendars, data.selected, data.events, settings.eventFilter]);
 
   // New events go to the primary calendar if it's shown, else the first
   // shown calendar you can write to, else any writable calendar.
@@ -72,6 +87,15 @@ export default function App({ backend }: { backend: Backend }) {
   return (
     <div className={styles.app}>
       <header className={styles.header}>
+        <button
+          className={styles.iconButton}
+          onClick={() => updateSettings({ sidebarOpen: !settings.sidebarOpen })}
+          aria-label={settings.sidebarOpen ? 'Hide calendars' : 'Show calendars'}
+          aria-expanded={settings.sidebarOpen}
+          title={settings.sidebarOpen ? 'Hide calendars' : 'Show calendars'}
+        >
+          ☰
+        </button>
         <div className={styles.brand}>
           <img src="/icons/icon-32.png" alt="" width={22} height={22} />
           Yearly Grid
@@ -95,10 +119,21 @@ export default function App({ backend }: { backend: Backend }) {
           >
             ↻
           </button>
+          <button
+            className={`${styles.iconButton} ${settingsOpen ? styles.active : ''}`}
+            onClick={() => setSettingsOpen((o) => !o)}
+            aria-label="Settings"
+            aria-expanded={settingsOpen}
+            title="Settings"
+            data-settings-toggle
+          >
+            ⚙
+          </button>
           {data.signedIn && isExtension() && (
             <button className={styles.textButton} onClick={data.signOut}>Sign out</button>
           )}
         </div>
+        {settingsOpen && <SettingsPanel settings={settings} onChange={updateSettings} onClose={closeSettings} />}
       </header>
 
       {backend.kind === 'mock' && (
@@ -119,15 +154,25 @@ export default function App({ backend }: { backend: Backend }) {
       )}
 
       <div className={styles.body}>
-        <aside className={styles.sidebar}>
-          <CalendarList calendars={data.calendars} selected={data.selected} onToggle={data.toggleCalendar} />
-          {canWrite && defaultCalendar && <p className={styles.hint}>Click or drag across days to add an event.</p>}
-        </aside>
+        {settings.sidebarOpen && (
+          <aside className={styles.sidebar}>
+            <CalendarList calendars={data.calendars} selected={data.selected} onToggle={data.toggleCalendar} />
+            {hidden > 0 && (
+              <p className={styles.hint}>
+                {hidden} timed {hidden === 1 ? 'event' : 'events'} hidden.{' '}
+                <button className={styles.linkButton} onClick={() => updateSettings({ eventFilter: 'all' })}>Show all</button>
+              </p>
+            )}
+            {canWrite && defaultCalendar && <p className={styles.hint}>Click or drag across days to add an event.</p>}
+          </aside>
+        )}
         <main className={styles.main}>
           <YearGrid
             year={year}
             events={gridEvents}
             editable={canWrite && Boolean(defaultCalendar)}
+            laneHeight={TEXT_SIZES[settings.textSize].lane}
+            fontSize={TEXT_SIZES[settings.textSize].font}
             onCreate={onCreate}
             onOpen={onOpen}
           />

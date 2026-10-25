@@ -1,7 +1,10 @@
 :root {
   color-scheme: light;
-  --accent: #7c3aed;
-  --accent-soft: rgba(124, 58, 237, 0.12);
+  /* Set from the chosen accent by applyTheme (lib/settings.ts); these are the defaults. */
+  --accent-light: #7c3aed;
+  --accent-dark: #a78bfa;
+  --accent: var(--accent-light);
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
   --on-accent: #ffffff;
   --header: #0f172a;
   --on-header: #f8fafc;
@@ -12,7 +15,7 @@
   --text-muted: #64748b;
   --border: #eef2f7;
   --border-strong: #dbe2ea;
-  --weekend: #f6f4fe;
+  --weekend: color-mix(in srgb, var(--accent) 4%, #ffffff);
   --outside: #e8ecf2;
   --hover: rgba(15, 23, 42, 0.05);
   --banner: #fef9c3;
@@ -20,12 +23,14 @@
   --danger-soft: #fee2e2;
 }
 
+/* Dark: follows the OS unless Settings forces light ([data-theme] on <html>).
+   The two blocks below must stay identical. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     color-scheme: dark;
-    --accent: #a78bfa;
-    --accent-soft: rgba(167, 139, 250, 0.16);
-    --on-accent: #1e1b4b;
+    --accent: var(--accent-dark);
+    --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+    --on-accent: #0f172a;
     --header: #020617;
     --bg: #0b1120;
     --surface: #111827;
@@ -34,13 +39,34 @@
     --text-muted: #94a3b8;
     --border: #1e293b;
     --border-strong: #334155;
-    --weekend: #161f33;
+    --weekend: color-mix(in srgb, var(--accent) 6%, #111827);
     --outside: #1e293b;
     --hover: rgba(255, 255, 255, 0.05);
     --banner: #3f3a12;
     --danger: #f87171;
     --danger-soft: #3b1515;
   }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --accent: var(--accent-dark);
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  --on-accent: #0f172a;
+  --header: #020617;
+  --bg: #0b1120;
+  --surface: #111827;
+  --surface-raised: #1e293b;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --border: #1e293b;
+  --border-strong: #334155;
+  --weekend: color-mix(in srgb, var(--accent) 6%, #111827);
+  --outside: #1e293b;
+  --hover: rgba(255, 255, 255, 0.05);
+  --banner: #3f3a12;
+  --danger: #f87171;
+  --danger-soft: #3b1515;
 }
 
 * {

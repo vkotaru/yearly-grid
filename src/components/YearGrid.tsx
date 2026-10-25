@@ -4,7 +4,6 @@ import { layoutYear, monthSegments } from '../lib/layout';
 import type { GridEvent } from '../lib/types';
 import styles from './YearGrid.module.css';
 
-const LANE_HEIGHT = 22;
 const MIN_LANES = 2;
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const WEEKDAY = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
@@ -13,12 +12,15 @@ interface Props {
   year: number;
   events: GridEvent[];
   editable: boolean;
+  /** Height of one event lane and the event font size, in px (from the text-size setting). */
+  laneHeight: number;
+  fontSize: number;
   /** Called after a click or drag across empty days (inclusive day numbers). */
   onCreate: (startDay: number, endDay: number) => void;
   onOpen: (event: GridEvent) => void;
 }
 
-export default function YearGrid({ year, events, editable, onCreate, onOpen }: Props) {
+export default function YearGrid({ year, events, editable, laneHeight, fontSize, onCreate, onOpen }: Props) {
   const layout = useMemo(() => layoutYear(events, year, MIN_LANES), [events, year]);
   const today = todayDayNum();
   const todayParts = fromDayNum(today);
@@ -56,7 +58,11 @@ export default function YearGrid({ year, events, editable, onCreate, onOpen }: P
   }, [year]); // only on year change, not on every edit
 
   return (
-    <div className={styles.grid} onDragStart={(e) => e.preventDefault()}>
+    <div
+      className={styles.grid}
+      style={{ ['--lane' as string]: `${laneHeight}px`, ['--event-font' as string]: `${fontSize}px` }}
+      onDragStart={(e) => e.preventDefault()}
+    >
       <div className={styles.header}>
         <div className={styles.corner} />
         <div className={styles.dayNumbers}>
@@ -78,7 +84,7 @@ export default function YearGrid({ year, events, editable, onCreate, onOpen }: P
             key={month}
             ref={(el) => { monthRefs.current[i] = el; }}
             className={styles.month}
-            style={{ height: lanes * LANE_HEIGHT + 6 }}
+            style={{ height: lanes * laneHeight + 6 }}
           >
             <div className={`${styles.monthLabel} ${isCurrentMonth ? styles.currentMonth : ''}`}>{name}</div>
             <div className={styles.days}>
@@ -122,8 +128,8 @@ export default function YearGrid({ year, events, editable, onCreate, onOpen }: P
                     style={{
                       left: `calc(${s.fromDay - 1} * 100% / 31 + 1px)`,
                       width: `calc(${span} * 100% / 31 - 2px)`,
-                      top: s.lane * LANE_HEIGHT + 3,
-                      height: LANE_HEIGHT - 3,
+                      top: s.lane * laneHeight + 3,
+                      height: laneHeight - 3,
                       background: e.allDay ? e.color : undefined,
                       color: e.allDay ? e.textColor : undefined,
                       ['--dot' as string]: e.color,
