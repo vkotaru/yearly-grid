@@ -1,5 +1,5 @@
-import { dayNumFromDate, dayNumFromIso, hhmm, isoFromDayNum, zonedParts } from './dates';
-import type { GCalendar, GEvent, GridEvent } from './types';
+import { dayNumFromDate, dayNumFromIso, fromDayNum, hhmm, isoFromDayNum, zonedParts } from './dates';
+import { calendarName, type GCalendar, type GEvent, type GridEvent } from './types';
 
 // Google's fixed event palette (colorId → background). These are the colours
 // the Calendar web UI shows; the API's /colors endpoint returns older shades.
@@ -40,6 +40,7 @@ export function toGridEvent(ev: GEvent, cal: GCalendar): GridEvent | null {
   return {
     key: `${cal.id}|${ev.id}`,
     calendarId: cal.id,
+    calendarName: calendarName(cal),
     event: ev,
     title: ev.summary || '(No title)',
     color,
@@ -49,6 +50,25 @@ export function toGridEvent(ev: GEvent, cal: GCalendar): GridEvent | null {
     allDay,
     timeLabel,
   };
+}
+
+const DAY_LABEL = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+function dayLabel(n: number): string {
+  const { year, month, day } = fromDayNum(n);
+  return DAY_LABEL.format(new Date(year, month - 1, day));
+}
+
+/** When an event happens, in the viewer's zone, e.g. "Thu, Mar 5 · 10:00 – 11:00". */
+export function describeWhen(g: GridEvent): string {
+  if (g.allDay) {
+    return g.startDay === g.endDay ? dayLabel(g.startDay) : `${dayLabel(g.startDay)} – ${dayLabel(g.endDay)}`;
+  }
+  const start = new Date(g.event.start.dateTime!);
+  const end = g.event.end?.dateTime ? new Date(g.event.end.dateTime) : start;
+  // startDay === endDay also covers events ending at midnight (see toGridEvent).
+  if (g.startDay === g.endDay) return `${dayLabel(g.startDay)} · ${hhmm(start)} – ${hhmm(end)}`;
+  return `${dayLabel(g.startDay)}, ${hhmm(start)} – ${dayLabel(dayNumFromDate(end))}, ${hhmm(end)}`;
 }
 
 /** What the editor edits. Days are inclusive day numbers; times are 'HH:MM'. */

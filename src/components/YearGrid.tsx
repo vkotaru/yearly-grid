@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { dayNum, daysInMonth, fromDayNum, isWeekend, MONTH_NAMES, todayDayNum } from '../lib/dates';
 import { layoutYear, monthSegments } from '../lib/layout';
 import type { GridEvent } from '../lib/types';
+import EventHoverCard from './EventHoverCard';
 import styles from './YearGrid.module.css';
 
 const MIN_LANES = 2;
+const HOVER_DELAY_MS = 450;
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const WEEKDAY = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 
@@ -45,6 +47,27 @@ export default function YearGrid({ year, events, editable, laneHeight, fontSize,
     window.addEventListener('mouseup', finish);
     return () => window.removeEventListener('mouseup', finish);
   }, [drag !== null, onCreate]); // re-bind only when a drag starts or ends
+
+  // ── Hover card: shown after resting on an event; any click, drag or scroll hides it ──
+  const [hover, setHover] = useState<{ event: GridEvent; anchor: DOMRect } | null>(null);
+  const hoverTimer = useRef<number>();
+  const hideHover = () => {
+    window.clearTimeout(hoverTimer.current);
+    setHover(null);
+  };
+  const scheduleHover = (event: GridEvent, el: HTMLElement) => {
+    window.clearTimeout(hoverTimer.current);
+    if (dragRef.current) return;
+    hoverTimer.current = window.setTimeout(() => setHover({ event, anchor: el.getBoundingClientRect() }), HOVER_DELAY_MS);
+  };
+  useEffect(() => {
+    if (!hover) return;
+    window.addEventListener('scroll', hideHover, true);
+    return () => window.removeEventListener('scroll', hideHover, true);
+  }, [hover]);
+  useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
+  // The event can change under the card (an edit, a refresh, a filter); drop it.
+  useEffect(hideHover, [events]);
 
   const inDrag = (n: number) =>
     drag !== null && n >= Math.min(drag.anchor, drag.current) && n <= Math.max(drag.anchor, drag.current);
@@ -134,12 +157,14 @@ export default function YearGrid({ year, events, editable, laneHeight, fontSize,
                       color: e.allDay ? e.textColor : undefined,
                       ['--dot' as string]: e.color,
                     }}
-                    title={`${e.title}${e.timeLabel ? ` · ${e.timeLabel}` : ''}`}
-                    onMouseDown={(ev) => ev.stopPropagation()}
+                    aria-label={`${e.title}${e.timeLabel ? `, ${e.timeLabel}` : ''}`}
+                    onMouseEnter={(ev) => scheduleHover(e, ev.currentTarget)}
+                    onMouseLeave={hideHover}
+                    onMouseDown={(ev) => { ev.stopPropagation(); hideHover(); }}
                     onClick={() => onOpen(e)}
                   >
-                    {e.timeLabel && <span className={styles.time}>{e.timeLabel}</span>}
                     {e.title}
+                    {e.timeLabel && <span className={styles.time}>{e.timeLabel}</span>}
                   </button>
                 );
               })}
@@ -147,6 +172,8 @@ export default function YearGrid({ year, events, editable, laneHeight, fontSize,
           </div>
         );
       })}
+
+      {hover && <EventHoverCard event={hover.event} anchor={hover.anchor} />}
     </div>
   );
 }

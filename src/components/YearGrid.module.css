@@ -145,7 +145,7 @@
 }
 
 .time {
-  margin-right: 4px;
+  margin-left: 4px;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }

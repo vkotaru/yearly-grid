@@ -75,6 +75,9 @@ under a couple of zones when touching it, e.g. `TZ=Pacific/Auckland npm test`.
   The event filter applies in `App.tsx` before layout, so hidden events free their lanes.
 - `components/YearGrid.tsx` — rendering, plus click/drag-to-create. The drag ref is written
   synchronously because the last `mouseenter` and the `mouseup` can land before a re-render.
+  Resting on an event shows `EventHoverCard` (fixed-positioned, `pointer-events: none`, placed
+  below or above the chip); a click, drag, scroll or change to `events` hides it. Event
+  descriptions can be HTML, so the card shows them as text via `DOMParser`.
 
 ## Google API notes
 

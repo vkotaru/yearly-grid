@@ -3,6 +3,7 @@
 A Chrome extension that shows your whole Google Calendar year on one 12 × 31 grid — every month a row, every day a column — so trips, work blocks and busy stretches are visible at a glance.
 
 - **Year at a glance**: multi-day and cross-month events stay on one line; timed events show their start time.
+- **Peek without clicking**: rest the mouse on an event to see its full title, time, calendar, location and notes.
 - **Choose your calendars**: show or hide any calendar in your Google account; the choice is remembered.
 - **Edit in place**: click or drag across empty days to create an event, click an event to change its title, dates, times, description or calendar, or delete it. Changes go straight to Google Calendar.
 - **Your view, your way**: hide the calendar sidebar, pick light/dark/system theme, an accent colour and text size, and choose whether the grid shows everything, all-day plus multi-day events, or all-day events only (⚙ in the header).

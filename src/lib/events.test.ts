@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { dayNum, dayOfWeek, isoFromDayNum } from './dates';
-import { applyDraft, draftFromGridEvent, draftToEventBody, newDraft, toGridEvent, validateDraft } from './events';
+import { applyDraft, describeWhen, draftFromGridEvent, draftToEventBody, newDraft, toGridEvent, validateDraft } from './events';
 import { layoutYear, monthSegments } from './layout';
 import type { GCalendar, GEvent, GridEvent } from './types';
 
@@ -132,5 +132,28 @@ describe('layoutYear', () => {
     const events = [g('nye', '2025-12-30', '2026-01-03')];
     const [seg] = monthSegments(events, layoutYear(events, 2026), 2026, 1);
     expect([seg.fromDay, seg.toDay, seg.continuesBefore]).toEqual([1, 2, true]);
+  });
+});
+
+describe('describeWhen', () => {
+  const timed = (start: string, end: string) =>
+    toGridEvent({ id: 't', start: { dateTime: start }, end: { dateTime: end } }, cal)!;
+  // Day labels are locale-formatted, so compare against the same formatter's output for the day.
+  const label = (iso: string) =>
+    new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+      .format(new Date(`${iso}T12:00:00`));
+
+  it('describes all-day events', () => {
+    expect(describeWhen(toGridEvent(allDay('a', '2026-03-05', '2026-03-06'), cal)!)).toBe(label('2026-03-05'));
+    expect(describeWhen(toGridEvent(allDay('a', '2026-03-05', '2026-03-09'), cal)!))
+      .toBe(`${label('2026-03-05')} – ${label('2026-03-08')}`);
+  });
+  it('describes timed events', () => {
+    expect(describeWhen(timed('2026-03-05T10:00:00', '2026-03-05T11:30:00')))
+      .toBe(`${label('2026-03-05')} · 10:00 – 11:30`);
+    expect(describeWhen(timed('2026-03-05T23:00:00', '2026-03-06T00:00:00')))
+      .toBe(`${label('2026-03-05')} · 23:00 – 00:00`);
+    expect(describeWhen(timed('2026-03-05T22:00:00', '2026-03-06T07:00:00')))
+      .toBe(`${label('2026-03-05')}, 22:00 – ${label('2026-03-06')}, 07:00`);
   });
 });

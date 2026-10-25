@@ -1,0 +1,51 @@
+.card {
+  position: fixed;
+  z-index: 15;
+  width: max-content;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  font-size: 12px;
+  line-height: 1.4;
+  /* Never steals the hover from the chip underneath. */
+  pointer-events: none;
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.row {
+  padding-left: 18px;
+  overflow-wrap: anywhere;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.description {
+  margin: 4px 0 0 18px;
+  white-space: pre-line;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}

@@ -43,6 +43,7 @@ export interface GEvent {
 export interface GridEvent {
   key: string;          // `${calendarId}|${event.id}` — unique across calendars
   calendarId: string;
+  calendarName: string;
   event: GEvent;
   title: string;
   color: string;
