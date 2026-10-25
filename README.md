@@ -63,13 +63,14 @@ npm run dev      # the UI in a normal browser tab, with sample data (no Google n
 npm run watch    # rebuild dist/ on change; reload the extension in chrome://extensions
 npm test         # unit tests (dates, event mapping, layout)
 npm run build    # typecheck + production build
+npm run package  # Chrome Web Store zip (no `key` field) — see store/README.md
 ```
 
 Architecture and gotchas are in [AGENTS.md](AGENTS.md).
 
 ## 🔒 Privacy
 
-Calendar data goes only between your browser and Google. Nothing is sent anywhere else, and there is no analytics. The extension caches calendars and events in Chrome's local extension storage; removing the extension deletes it.
+Full policy: [vkotaru.github.io/yearly-grid/privacy.html](https://vkotaru.github.io/yearly-grid/privacy.html). In short: calendar data goes only between your browser and Google. Nothing is sent anywhere else, and there is no analytics. The extension caches calendars and events in Chrome's local extension storage; removing the extension deletes it.
 
 ## Limitations
 

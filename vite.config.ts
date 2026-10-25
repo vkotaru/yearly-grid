@@ -6,7 +6,9 @@ import { readFileSync } from 'node:fs';
 // Writes dist/manifest.json from manifest.template.json, filling in the OAuth
 // client ID and the extension's public key from .env. Both are tied to *your*
 // Google Cloud project and extension ID, so they're kept out of the repo.
-function manifest(env: Record<string, string>): Plugin {
+// The Chrome Web Store rejects a `key` field (it signs uploads itself), so
+// `--mode store` (npm run package) leaves it out.
+function manifest(env: Record<string, string>, store: boolean): Plugin {
   return {
     name: 'yearly-grid-manifest',
     apply: 'build',
@@ -17,7 +19,9 @@ function manifest(env: Record<string, string>): Plugin {
       } else {
         this.warn('OAUTH_CLIENT_ID is not set in .env — Google sign-in will fail.');
       }
-      if (env.EXTENSION_KEY) {
+      if (store) {
+        // No key: the store assigns the ID.
+      } else if (env.EXTENSION_KEY) {
         m.key = env.EXTENSION_KEY;
       } else {
         this.warn('EXTENSION_KEY is not set in .env — the extension ID will change per install.');
@@ -30,7 +34,7 @@ function manifest(env: Record<string, string>): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
-    plugins: [react(), manifest(env)],
+    plugins: [react(), manifest(env, mode === 'store')],
     build: {
       rollupOptions: {
         input: { index: 'index.html', background: 'src/background.ts' },

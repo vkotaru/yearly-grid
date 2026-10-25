@@ -1,5 +1,7 @@
 node_modules/
 dist/
+dist-store/
+*.zip
 .env
 *.pem
 *.tsbuildinfo

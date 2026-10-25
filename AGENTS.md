@@ -17,6 +17,7 @@ npm run dev        # UI in a normal tab with the mock backend (sample data, in-m
 npm run watch      # rebuild dist/ on change; then reload the extension in chrome://extensions
 npm run build      # typecheck (app + vite config) and build the unpacked extension into dist/
 npm run typecheck
+npm run package    # store build into dist-store/ (manifest without `key`) and yearly-grid-<version>.zip
 npm test           # vitest, run once
 npx vitest run -t "layoutYear"   # a single test by name
 ```
@@ -33,6 +34,11 @@ under a couple of zones when touching it, e.g. `TZ=Pacific/Auckland npm test`.
 - Two entry points: `index.html` (the grid page, opened in a tab) and `src/background.ts` (service
   worker, emitted as a fixed `background.js`). The worker only opens/focuses the page on toolbar
   click, using `runtime.getContexts` so no `tabs` permission is needed.
+- The Chrome Web Store rejects a manifest `key`, so `--mode store` omits it. For local builds to
+  share the store's extension ID (and so its OAuth client), `EXTENSION_KEY` should be the store
+  item's public key. `store/README.md` is the publishing checklist and paste-ready listing text.
+- `docs/` is the GitHub Pages site (homepage + privacy policy linked from the store listing and the
+  OAuth consent screen). Keep `docs/privacy.html` accurate when changing what data is stored or sent.
 - Extension pages can't run inline scripts or load remote code (MV3 CSP) — keep everything bundled.
 
 ## Architecture (`src/`)

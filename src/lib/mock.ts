@@ -29,8 +29,9 @@ function allDay(calendarId: string, summary: string, start: number, days = 1, co
   });
 }
 
-function timed(calendarId: string, summary: string, day: number, from: string, to: string) {
+function timed(calendarId: string, summary: string, day: number, from: string, to: string, extra: Partial<GEvent> = {}) {
   put(calendarId, {
+    ...extra,
     id: `mock${nextId++}`, summary,
     start: { dateTime: `${isoFromDayNum(day)}T${from}:00` }, end: { dateTime: `${isoFromDayNum(day)}T${to}:00` },
   });
@@ -59,6 +60,21 @@ function seed(year: number) {
   timed('personal', 'Dentist', d(2, 10), '09:30', '10:30');
   timed('work', 'Quarterly Review', d(4, 2), '14:00', '15:00');
   timed('personal', 'Concert', d(10, 3), '19:00', '22:00');
+  allDay('work', 'Product Conference', d(5, 12), 3, '3');
+  allDay('work', 'Team Offsite', d(8, 26), 2, '10');
+  allDay('personal', 'Road Trip', d(4, 17), 5, '5');
+  allDay('family', 'Kids Spring Break', d(3, 23), 5);
+  allDay('personal', 'Lake Cabin', d(7, 17), 4);
+  allDay('personal', 'Half Marathon', d(10, 18));
+  allDay('family', 'Thanksgiving at Grandma’s', d(11, 25), 4);
+  allDay('work', 'Year-end Planning', d(12, 7), 3, '3');
+  timed('personal', 'Book Club', d(1, 14), '19:00', '20:30');
+  timed('personal', 'Flight to Paris', d(6, 26), '17:45', '23:55', {
+    location: 'SFO Terminal 2',
+    description: 'Seat 23A. Check in online the day before, and bring the travel adapter.',
+  });
+  timed('work', 'Board Meeting', d(9, 22), '10:00', '12:00', { location: 'Room 4B' });
+  timed('family', 'Parent–Teacher Night', d(10, 8), '18:00', '19:30');
 }
 
 const delay = () => new Promise((r) => setTimeout(r, 150));

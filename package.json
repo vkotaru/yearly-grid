@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "npm run typecheck && vite build",
     "watch": "vite build --watch",
+    "package": "npm run typecheck && vite build --mode store --outDir dist-store && rm -f yearly-grid-$npm_package_version.zip && cd dist-store && zip -qrX ../yearly-grid-$npm_package_version.zip .",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "test": "vitest run",
     "test:watch": "vitest"
