@@ -115,6 +115,11 @@
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
+/* Days before today: fine diagonal stripes, as in yearly.app. */
+.past {
+  background: repeating-linear-gradient(-45deg, var(--past-a) 0 2px, var(--past-b) 2px 4px);
+}
+
 .outside {
   background: repeating-linear-gradient(135deg, var(--outside) 0 4px, transparent 4px 8px);
 }
@@ -193,6 +198,15 @@
 .contAfter {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+}
+
+/* Events that have ended: mostly grey (opacity is set inline, with the calendar's). */
+.pastEvent {
+  filter: grayscale(60%) brightness(1.05);
+}
+
+.pastEvent:hover {
+  filter: grayscale(30%);
 }
 
 .tentative {

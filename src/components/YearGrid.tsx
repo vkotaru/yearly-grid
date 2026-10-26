@@ -130,6 +130,7 @@ export default function YearGrid({ year, events, editable, laneHeight, fontSize,
                 const cls = [
                   styles.cell,
                   isWeekend(n) && styles.weekend,
+                  n < today && styles.past,
                   n === today && styles.today,
                   inDrag(n) && styles.selecting,
                   editable && styles.clickable,
@@ -155,8 +156,10 @@ export default function YearGrid({ year, events, editable, laneHeight, fontSize,
                   s.continuesBefore && styles.contBefore,
                   s.continuesAfter && styles.contAfter,
                   e.event.status === 'tentative' && styles.tentative,
+                  e.endDay < today && styles.pastEvent,
                 ].filter(Boolean).join(' ');
-                const alpha = (e.alpha ?? 1) * (e.event.status === 'tentative' ? 0.6 : 1);
+                const alpha =
+                  (e.alpha ?? 1) * (e.event.status === 'tentative' ? 0.6 : 1) * (e.endDay < today ? 0.7 : 1);
                 return (
                   <button
                     key={e.key}

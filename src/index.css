@@ -20,6 +20,8 @@
   --month-border: color-mix(in srgb, var(--accent) 45%, var(--border-strong));
   --weekend: color-mix(in srgb, var(--accent) 4%, #ffffff);
   --outside: #e8ecf2;
+  --past-a: #f1f4f8;
+  --past-b: #e6ebf1;
   --hover: rgba(15, 23, 42, 0.05);
   --banner: #fef9c3;
   --danger: #dc2626;
@@ -44,6 +46,8 @@
     --border-strong: #334155;
     --weekend: color-mix(in srgb, var(--accent) 6%, #111827);
     --outside: #1e293b;
+    --past-a: #111827;
+    --past-b: #1a2333;
     --hover: rgba(255, 255, 255, 0.05);
     --banner: #3f3a12;
     --danger: #f87171;
@@ -66,6 +70,8 @@
   --border-strong: #334155;
   --weekend: color-mix(in srgb, var(--accent) 6%, #111827);
   --outside: #1e293b;
+  --past-a: #111827;
+  --past-b: #1a2333;
   --hover: rgba(255, 255, 255, 0.05);
   --banner: #3f3a12;
   --danger: #f87171;
