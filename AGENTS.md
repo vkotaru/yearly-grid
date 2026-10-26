@@ -73,8 +73,8 @@ under a couple of zones when touching it, e.g. `TZ=Pacific/Auckland npm test`.
   the UI to signed-out. Edits are **not queued offline**: the UI is read-only offline, and the
   cache is only ever updated from the API's response. Sign out sets a flag so the next launch
   doesn't silently sign back in.
-- `lib/settings.ts` — view preferences (theme, accent, font, text size, event filter, sidebar,
-  per-calendar opacity, extra month rows). Kept in
+- `lib/settings.ts` — view preferences (theme, accent, font, text size, event filter, sidebar
+  open and width, per-calendar opacity, extra month rows). Kept in
   `localStorage`, not `chrome.storage`, because it's synchronous: `main.tsx` applies the theme
   before the first render so it doesn't flash. Theme is `data-theme` on `<html>`; accents are
   `--accent-light`/`--accent-dark` set inline from `ACCENT_COLORS`, and `--font` from `FONTS` —

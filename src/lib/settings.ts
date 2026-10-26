@@ -63,6 +63,8 @@ export interface Settings {
   textSize: TextSize;
   eventFilter: EventFilter;
   sidebarOpen: boolean;
+  /** Sidebar width in px, set by dragging its edge. */
+  sidebarWidth: number;
   /** Event opacity per calendar id, 0–1; calendars not listed are fully opaque. */
   calendarAlpha: Record<string, number>;
   /** Empty lanes added with a month's + button, keyed `${year}-${month}`. */
@@ -76,6 +78,7 @@ export const DEFAULT_SETTINGS: Settings = {
   textSize: 'medium',
   eventFilter: 'all',
   sidebarOpen: true,
+  sidebarWidth: 210,
   calendarAlpha: {},
   extraLanes: {},
 };
@@ -96,6 +99,12 @@ const KEY = 'settings';
 
 const isRecord = (v: unknown): v is Record<string, number> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
+export const SIDEBAR_WIDTH = { min: 160, max: 480 };
+export function clampSidebarWidth(w: unknown): number {
+  if (typeof w !== 'number' || !Number.isFinite(w)) return DEFAULT_SETTINGS.sidebarWidth;
+  return Math.round(Math.min(SIDEBAR_WIDTH.max, Math.max(SIDEBAR_WIDTH.min, w)));
+}
+
 export const laneKey = (year: number, month: number) => `${year}-${month}`;
 
 export function loadSettings(): Settings {
@@ -107,6 +116,7 @@ export function loadSettings(): Settings {
     if (!ACCENTS.includes(merged.accent)) merged.accent = DEFAULT_SETTINGS.accent;
     if (!(merged.font in FONTS)) merged.font = DEFAULT_SETTINGS.font;
     if (!(merged.textSize in TEXT_SIZES)) merged.textSize = DEFAULT_SETTINGS.textSize;
+    merged.sidebarWidth = clampSidebarWidth(merged.sidebarWidth);
     if (!isRecord(merged.calendarAlpha)) merged.calendarAlpha = {};
     if (!isRecord(merged.extraLanes)) merged.extraLanes = {};
     return merged;

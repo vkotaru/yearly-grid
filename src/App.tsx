@@ -6,7 +6,7 @@ import SettingsPanel from './components/SettingsPanel';
 import YearGrid from './components/YearGrid';
 import { isExtension, type Backend } from './lib/backend';
 import { draftFromGridEvent, newDraft, toGridEvent, type Draft } from './lib/events';
-import { applyTheme, EVENT_FILTERS, laneKey, loadSettings, passesFilter, saveSettings, TEXT_SIZES, type Settings } from './lib/settings';
+import { applyTheme, clampSidebarWidth, DEFAULT_SETTINGS, EVENT_FILTERS, laneKey, loadSettings, passesFilter, saveSettings, TEXT_SIZES, type Settings } from './lib/settings';
 import { canEdit, type GridEvent } from './lib/types';
 import { useYearData } from './useYearData';
 import styles from './App.module.css';
@@ -98,6 +98,33 @@ export default function App({ backend }: { backend: Backend }) {
     [year],
   );
 
+  // ── Sidebar resize: drag its right edge; double-click resets ──
+  const [dragWidth, setDragWidth] = useState<number | null>(null);
+  const sidebarWidth = dragWidth ?? settings.sidebarWidth;
+  const startResize = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const handle = e.currentTarget;
+    handle.setPointerCapture(e.pointerId);
+    const startX = e.clientX;
+    const startWidth = settings.sidebarWidth;
+    let width = startWidth;
+    const move = (ev: PointerEvent) => {
+      width = clampSidebarWidth(startWidth + ev.clientX - startX);
+      setDragWidth(width);
+    };
+    const up = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+      handle.removeEventListener('pointercancel', up);
+      setDragWidth(null);
+      updateSettings({ sidebarWidth: width });
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+    handle.addEventListener('pointercancel', up);
+  };
+
   const onOpen = useCallback((g: GridEvent) => setEditing({ draft: draftFromGridEvent(g), existing: g }), []);
   const closeEditor = useCallback(() => setEditing(null), []);
 
@@ -184,7 +211,7 @@ export default function App({ backend }: { backend: Backend }) {
 
       <div className={styles.body}>
         {settings.sidebarOpen && (
-          <aside className={styles.sidebar}>
+          <aside className={styles.sidebar} style={{ width: sidebarWidth }}>
             <section className={styles.sideSection}>
               <h2 className={styles.sideHeading}>Show</h2>
               <Segmented
@@ -209,6 +236,17 @@ export default function App({ backend }: { backend: Backend }) {
             )}
             {canWrite && defaultCalendar && <p className={styles.hint}>Click or drag across days to add an event.</p>}
           </aside>
+        )}
+        {settings.sidebarOpen && (
+          <div
+            className={`${styles.resizer} ${dragWidth !== null ? styles.resizing : ''}`}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize calendars"
+            title="Drag to resize · double-click to reset"
+            onPointerDown={startResize}
+            onDoubleClick={() => updateSettings({ sidebarWidth: DEFAULT_SETTINGS.sidebarWidth })}
+          />
         )}
         <main className={styles.main}>
           <YearGrid

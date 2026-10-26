@@ -115,12 +115,27 @@
 }
 
 .sidebar {
-  width: 210px;
   flex: none;
   padding: 16px 12px;
   overflow-y: auto;
-  border-right: 1px solid var(--border);
   background: var(--surface);
+}
+
+/* Drag handle on the sidebar's right edge; it is also the sidebar's border. */
+.resizer {
+  flex: none;
+  width: 5px;
+  margin-right: -4px; /* wider grab area without taking space from the grid */
+  position: relative;
+  z-index: 4;
+  cursor: col-resize;
+  touch-action: none;
+  border-left: 1px solid var(--border);
+}
+
+.resizer:hover,
+.resizing {
+  border-left: 3px solid var(--accent);
 }
 
 .sideSection {
@@ -207,9 +222,12 @@
   }
 
   .sidebar {
-    width: auto;
+    width: auto !important; /* overrides the dragged width */
     max-height: 32vh;
-    border-right: none;
     border-bottom: 1px solid var(--border);
+  }
+
+  .resizer {
+    display: none;
   }
 }
