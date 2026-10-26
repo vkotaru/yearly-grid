@@ -22,22 +22,81 @@
 .item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 6px;
+  gap: 6px;
+  padding: 0 6px;
   border-radius: 6px;
   font-size: 13px;
-  cursor: pointer;
 }
 
 .item:hover {
   background: var(--hover);
 }
 
-.item input {
+.toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.toggle input {
   width: 15px;
   height: 15px;
   margin: 0;
   flex: none;
+  cursor: pointer;
+}
+
+/* Opacity button: hidden until the row is hovered, unless the calendar is dimmed. */
+.alphaButton {
+  flex: none;
+  min-width: 22px;
+  padding: 1px 4px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.item:hover .alphaButton,
+.alphaButton:focus-visible,
+.alphaButton.shown {
+  opacity: 1;
+}
+
+.alphaButton:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.slider {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px 6px 29px;
+}
+
+.slider input {
+  flex: 1;
+  min-width: 0;
+}
+
+.reset {
+  flex: none;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
   cursor: pointer;
 }
 

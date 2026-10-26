@@ -15,6 +15,9 @@
   --text-muted: #64748b;
   --border: #eef2f7;
   --border-strong: #dbe2ea;
+  /* Month separators: accent-tinted so each month reads as a block. Defined once,
+     it follows the dark overrides of --accent and --border-strong below. */
+  --month-border: color-mix(in srgb, var(--accent) 45%, var(--border-strong));
   --weekend: color-mix(in srgb, var(--accent) 4%, #ffffff);
   --outside: #e8ecf2;
   --hover: rgba(15, 23, 42, 0.05);

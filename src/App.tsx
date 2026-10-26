@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CalendarList from './components/CalendarList';
 import EventEditor from './components/EventEditor';
+import Segmented from './components/Segmented';
 import SettingsPanel from './components/SettingsPanel';
 import YearGrid from './components/YearGrid';
 import { isExtension, type Backend } from './lib/backend';
 import { draftFromGridEvent, newDraft, toGridEvent, type Draft } from './lib/events';
-import { applyTheme, loadSettings, passesFilter, saveSettings, TEXT_SIZES, type Settings } from './lib/settings';
+import { applyTheme, EVENT_FILTERS, laneKey, loadSettings, passesFilter, saveSettings, TEXT_SIZES, type Settings } from './lib/settings';
 import { canEdit, type GridEvent } from './lib/types';
 import { useYearData } from './useYearData';
 import styles from './App.module.css';
@@ -44,15 +45,17 @@ export default function App({ backend }: { backend: Backend }) {
     let hidden = 0;
     for (const cal of data.calendars) {
       if (!data.selected.includes(cal.id)) continue;
+      const alpha = settings.calendarAlpha[cal.id];
       for (const ev of data.events[cal.id] ?? []) {
         const g = toGridEvent(ev, cal);
         if (!g) continue;
+        if (alpha !== undefined) g.alpha = alpha;
         if (passesFilter(g, settings.eventFilter)) out.push(g);
         else hidden++;
       }
     }
     return { gridEvents: out, hidden };
-  }, [data.calendars, data.selected, data.events, settings.eventFilter]);
+  }, [data.calendars, data.selected, data.events, settings.eventFilter, settings.calendarAlpha]);
 
   // New events go to the primary calendar if it's shown, else the first
   // shown calendar you can write to, else any writable calendar.
@@ -67,6 +70,32 @@ export default function App({ backend }: { backend: Backend }) {
       if (defaultCalendar) setEditing({ draft: newDraft(defaultCalendar, start, end) });
     },
     [defaultCalendar],
+  );
+
+  const setCalendarAlpha = useCallback(
+    (id: string, value: number) =>
+      setSettings((s) => {
+        const calendarAlpha = { ...s.calendarAlpha };
+        if (value >= 1) delete calendarAlpha[id];
+        else calendarAlpha[id] = value;
+        return { ...s, calendarAlpha };
+      }),
+    [],
+  );
+
+  const extraLanes = useMemo(
+    () => Array.from({ length: 12 }, (_, i) => settings.extraLanes[laneKey(year, i + 1)] ?? 0),
+    [settings.extraLanes, year],
+  );
+  const setExtraLanes = useCallback(
+    (month: number, count: number) =>
+      setSettings((s) => {
+        const extra = { ...s.extraLanes };
+        if (count > 0) extra[laneKey(year, month)] = count;
+        else delete extra[laneKey(year, month)];
+        return { ...s, extraLanes: extra };
+      }),
+    [year],
   );
 
   const onOpen = useCallback((g: GridEvent) => setEditing({ draft: draftFromGridEvent(g), existing: g }), []);
@@ -156,7 +185,22 @@ export default function App({ backend }: { backend: Backend }) {
       <div className={styles.body}>
         {settings.sidebarOpen && (
           <aside className={styles.sidebar}>
-            <CalendarList calendars={data.calendars} selected={data.selected} onToggle={data.toggleCalendar} />
+            <section className={styles.sideSection}>
+              <h2 className={styles.sideHeading}>Show</h2>
+              <Segmented
+                label="Show on the grid"
+                value={settings.eventFilter}
+                options={EVENT_FILTERS.map((f) => [f.value, f.short, f.hint])}
+                onChange={(eventFilter) => updateSettings({ eventFilter })}
+              />
+            </section>
+            <CalendarList
+              calendars={data.calendars}
+              selected={data.selected}
+              onToggle={data.toggleCalendar}
+              alpha={settings.calendarAlpha}
+              onAlpha={setCalendarAlpha}
+            />
             {hidden > 0 && (
               <p className={styles.hint}>
                 {hidden} timed {hidden === 1 ? 'event' : 'events'} hidden.{' '}
@@ -175,6 +219,8 @@ export default function App({ backend }: { backend: Backend }) {
             fontSize={TEXT_SIZES[settings.textSize].font}
             onCreate={onCreate}
             onOpen={onOpen}
+            extraLanes={extraLanes}
+            onExtraLanes={setExtraLanes}
           />
         </main>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { ACCENT_COLORS, ACCENTS, FONT_KEYS, FONTS, type EventFilter, type Settings, type TextSize, type Theme } from '../lib/settings';
+import { ACCENT_COLORS, ACCENTS, EVENT_FILTERS, FONT_KEYS, FONTS, type Settings, type TextSize, type Theme } from '../lib/settings';
+import Segmented from './Segmented';
 import styles from './SettingsPanel.module.css';
 
 interface Props {
@@ -10,35 +11,6 @@ interface Props {
 
 const THEMES: [Theme, string][] = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']];
 const SIZES: [TextSize, string][] = [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']];
-const FILTERS: [EventFilter, string, string][] = [
-  ['all', 'Everything', 'All-day and timed events'],
-  ['multiDay', 'All-day + multi-day', 'Hides timed events that start and end on the same day'],
-  ['allDay', 'All-day only', 'Hides every timed event'],
-];
-
-function Segmented<T extends string>({ value, options, onChange, label }: {
-  value: T;
-  options: [T, string][];
-  onChange: (v: T) => void;
-  label: string;
-}) {
-  return (
-    <div className={styles.segmented} role="radiogroup" aria-label={label}>
-      {options.map(([v, text]) => (
-        <button
-          key={v}
-          type="button"
-          role="radio"
-          aria-checked={value === v}
-          className={value === v ? styles.on : undefined}
-          onClick={() => onChange(v)}
-        >
-          {text}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 export default function SettingsPanel({ settings, onChange, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -111,7 +83,7 @@ export default function SettingsPanel({ settings, onChange, onClose }: Props) {
       <section>
         <h2>Show on the grid</h2>
         <div className={styles.options} role="radiogroup" aria-label="Show on the grid">
-          {FILTERS.map(([v, title, hint]) => (
+          {EVENT_FILTERS.map(({ value: v, title, hint }) => (
             <label key={v} className={styles.option}>
               <input
                 type="radio"

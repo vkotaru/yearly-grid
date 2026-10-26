@@ -20,9 +20,12 @@ interface Props {
   /** Called after a click or drag across empty days (inclusive day numbers). */
   onCreate: (startDay: number, endDay: number) => void;
   onOpen: (event: GridEvent) => void;
+  /** Empty lanes added to each month (index 0 = January) with its + button. */
+  extraLanes: number[];
+  onExtraLanes: (month: number, count: number) => void;
 }
 
-export default function YearGrid({ year, events, editable, laneHeight, fontSize, onCreate, onOpen }: Props) {
+export default function YearGrid({ year, events, editable, laneHeight, fontSize, onCreate, onOpen, extraLanes, onExtraLanes }: Props) {
   const layout = useMemo(() => layoutYear(events, year, 0), [events, year]);
   const today = todayDayNum();
   const todayParts = fromDayNum(today);
@@ -99,7 +102,8 @@ export default function YearGrid({ year, events, editable, laneHeight, fontSize,
         const month = i + 1;
         const dim = daysInMonth(year, month);
         // When editable, keep one free lane below the events so a full month still has empty days to click.
-        const lanes = Math.max(MIN_LANES, layout.lanesByMonth[i] + (editable ? 1 : 0));
+        const extra = extraLanes[i];
+        const lanes = Math.max(MIN_LANES, layout.lanesByMonth[i] + (editable ? 1 : 0)) + extra;
         const segments = monthSegments(events, layout, year, month);
         const isCurrentMonth = year === todayParts.year && month === todayParts.month;
 
@@ -110,7 +114,15 @@ export default function YearGrid({ year, events, editable, laneHeight, fontSize,
             className={styles.month}
             style={{ height: lanes * laneHeight + 6 }}
           >
-            <div className={`${styles.monthLabel} ${isCurrentMonth ? styles.currentMonth : ''}`}>{name}</div>
+            <div className={`${styles.monthLabel} ${isCurrentMonth ? styles.currentMonth : ''}`}>
+              {name}
+              <div className={styles.laneButtons}>
+                <button type="button" onClick={() => onExtraLanes(month, extra + 1)} title="Add a row" aria-label={`Add a row to ${name}`}>+</button>
+                {extra > 0 && (
+                  <button type="button" onClick={() => onExtraLanes(month, extra - 1)} title="Remove a row" aria-label={`Remove a row from ${name}`}>−</button>
+                )}
+              </div>
+            </div>
             <div className={styles.days}>
               {DAYS.map((d) => {
                 if (d > dim) return <div key={d} className={`${styles.cell} ${styles.outside}`} />;
@@ -144,6 +156,7 @@ export default function YearGrid({ year, events, editable, laneHeight, fontSize,
                   s.continuesAfter && styles.contAfter,
                   e.event.status === 'tentative' && styles.tentative,
                 ].filter(Boolean).join(' ');
+                const alpha = (e.alpha ?? 1) * (e.event.status === 'tentative' ? 0.6 : 1);
                 return (
                   <button
                     key={e.key}
@@ -157,6 +170,8 @@ export default function YearGrid({ year, events, editable, laneHeight, fontSize,
                       background: e.allDay ? e.color : undefined,
                       color: e.allDay ? e.textColor : undefined,
                       ['--dot' as string]: e.color,
+                      opacity: alpha < 1 ? alpha : undefined,
+                      pointerEvents: alpha === 0 ? 'none' : undefined,
                     }}
                     aria-label={`${e.title}${e.timeLabel ? `, ${e.timeLabel}` : ''}`}
                     onMouseEnter={(ev) => scheduleHover(e, ev.currentTarget)}

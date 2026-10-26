@@ -8,6 +8,12 @@ export type TextSize = 'small' | 'medium' | 'large';
 /** Which events the grid shows. All-day events are always shown. */
 export type EventFilter = 'all' | 'multiDay' | 'allDay';
 
+export const EVENT_FILTERS: { value: EventFilter; short: string; title: string; hint: string }[] = [
+  { value: 'all', short: 'All', title: 'Everything', hint: 'All-day and timed events' },
+  { value: 'multiDay', short: 'Multi-day', title: 'All-day + multi-day', hint: 'Hides timed events that start and end on the same day' },
+  { value: 'allDay', short: 'All-day', title: 'All-day only', hint: 'Hides every timed event' },
+];
+
 /** Accent colours: [light-theme shade, dark-theme shade]. */
 export const ACCENT_COLORS = {
   violet: ['#7c3aed', '#a78bfa'],
@@ -57,6 +63,10 @@ export interface Settings {
   textSize: TextSize;
   eventFilter: EventFilter;
   sidebarOpen: boolean;
+  /** Event opacity per calendar id, 0–1; calendars not listed are fully opaque. */
+  calendarAlpha: Record<string, number>;
+  /** Empty lanes added with a month's + button, keyed `${year}-${month}`. */
+  extraLanes: Record<string, number>;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -66,6 +76,8 @@ export const DEFAULT_SETTINGS: Settings = {
   textSize: 'medium',
   eventFilter: 'all',
   sidebarOpen: true,
+  calendarAlpha: {},
+  extraLanes: {},
 };
 
 /** Lane height (px) and event font size (px) for each text size. */
@@ -82,6 +94,10 @@ export function passesFilter(g: GridEvent, filter: EventFilter): boolean {
 
 const KEY = 'settings';
 
+const isRecord = (v: unknown): v is Record<string, number> => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+export const laneKey = (year: number, month: number) => `${year}-${month}`;
+
 export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(KEY);
@@ -91,6 +107,8 @@ export function loadSettings(): Settings {
     if (!ACCENTS.includes(merged.accent)) merged.accent = DEFAULT_SETTINGS.accent;
     if (!(merged.font in FONTS)) merged.font = DEFAULT_SETTINGS.font;
     if (!(merged.textSize in TEXT_SIZES)) merged.textSize = DEFAULT_SETTINGS.textSize;
+    if (!isRecord(merged.calendarAlpha)) merged.calendarAlpha = {};
+    if (!isRecord(merged.extraLanes)) merged.extraLanes = {};
     return merged;
   } catch {
     return DEFAULT_SETTINGS;

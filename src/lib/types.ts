@@ -52,6 +52,7 @@ export interface GridEvent {
   endDay: number;
   allDay: boolean;
   timeLabel?: string;   // 'HH:MM' start time for timed events
+  alpha?: number;       // 0–1 from the calendar's opacity setting; unset = opaque
 }
 
 export function canEdit(cal: GCalendar): boolean {

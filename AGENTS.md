@@ -73,14 +73,18 @@ under a couple of zones when touching it, e.g. `TZ=Pacific/Auckland npm test`.
   the UI to signed-out. Edits are **not queued offline**: the UI is read-only offline, and the
   cache is only ever updated from the API's response. Sign out sets a flag so the next launch
   doesn't silently sign back in.
-- `lib/settings.ts` — view preferences (theme, accent, font, text size, event filter, sidebar). Kept in
+- `lib/settings.ts` — view preferences (theme, accent, font, text size, event filter, sidebar,
+  per-calendar opacity, extra month rows). Kept in
   `localStorage`, not `chrome.storage`, because it's synchronous: `main.tsx` applies the theme
   before the first render so it doesn't flash. Theme is `data-theme` on `<html>`; accents are
   `--accent-light`/`--accent-dark` set inline from `ACCENT_COLORS`, and `--font` from `FONTS` —
   stacks of locally installed fonts, deliberately not web fonts (no downloads, works offline). `index.css` has the dark
   variables twice (OS-dark unless forced light, and forced dark) — keep the two blocks identical.
   The event filter applies in `App.tsx` before layout, so hidden events free their lanes.
-- `components/YearGrid.tsx` — rendering, plus click/drag-to-create. The drag ref is written
+  Calendar opacity is only drawn (`GridEvent.alpha`); a calendar at 0 still holds its lanes.
+- `components/YearGrid.tsx` — rendering, plus click/drag-to-create. When editable, each month gets
+  one free lane below its events, plus any rows added with the month's + button (`extraLanes`,
+  keyed by year and month). Google events have no row, so these are only empty space to click in. The drag ref is written
   synchronously because the last `mouseenter` and the `mouseup` can land before a re-render.
   Resting on an event shows `EventHoverCard` (fixed-positioned, `pointer-events: none`, placed
   below or above the chip); a click, drag, scroll or change to `events` hides it. Event
