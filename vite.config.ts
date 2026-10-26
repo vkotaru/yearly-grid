@@ -3,8 +3,9 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { readFileSync } from 'node:fs';
 
-// Writes dist/manifest.json from manifest.template.json, filling in the OAuth
-// client ID and the extension's public key from .env. Both are tied to *your*
+// Writes dist/manifest.json from manifest.template.json, filling in the version
+// from package.json (so `npm version` is the only place it changes), and the OAuth
+// client ID and the extension's public key from .env (or the environment, in CI). Both are tied to *your*
 // Google Cloud project and extension ID, so they're kept out of the repo.
 // The Chrome Web Store rejects a `key` field (it signs uploads itself), so
 // `--mode store` (npm run package) leaves it out.
@@ -14,6 +15,7 @@ function manifest(env: Record<string, string>, store: boolean): Plugin {
     apply: 'build',
     generateBundle() {
       const m = JSON.parse(readFileSync('manifest.template.json', 'utf8'));
+      m.version = JSON.parse(readFileSync('package.json', 'utf8')).version;
       if (env.OAUTH_CLIENT_ID) {
         m.oauth2.client_id = env.OAUTH_CLIENT_ID;
       } else {

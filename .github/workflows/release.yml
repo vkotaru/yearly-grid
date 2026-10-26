@@ -1,0 +1,64 @@
+# Publishes a new version to the Chrome Web Store when a version tag is pushed:
+#
+#   npm version patch && git push --follow-tags
+#
+# It uploads the store zip and submits it for review; Google still reviews every
+# version before installs update. One-time setup (OAuth client, refresh token,
+# repo secrets and variables) is in store/README.md.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check the tag matches package.json
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - run: npm test
+
+      - name: Build the store zip
+        run: npm run package
+        env:
+          OAUTH_CLIENT_ID: ${{ vars.OAUTH_CLIENT_ID }}
+
+      - name: Check the build has a client ID
+        run: |
+          if ! grep -q '"client_id": ".\+apps.googleusercontent.com"' dist-store/manifest.json; then
+            echo "::error::OAUTH_CLIENT_ID repo variable is missing; sign-in would be broken"
+            exit 1
+          fi
+
+      - name: Upload and submit for review
+        run: npx --yes chrome-webstore-upload-cli@4.0.2 --source "yearly-grid-$VERSION.zip"
+        env:
+          EXTENSION_ID: ${{ vars.EXTENSION_ID }}
+          PUBLISHER_ID: ${{ vars.PUBLISHER_ID }}
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}

@@ -37,6 +37,10 @@ under a couple of zones when touching it, e.g. `TZ=Pacific/Auckland npm test`.
 - The Chrome Web Store rejects a manifest `key`, so `--mode store` omits it. For local builds to
   share the store's extension ID (and so its OAuth client), `EXTENSION_KEY` should be the store
   item's public key. `store/README.md` is the publishing checklist and paste-ready listing text.
+- The manifest version comes from `package.json` (`vite.config.ts`); release with
+  `npm version patch && git push --follow-tags`, which runs `.github/workflows/release.yml` to
+  upload to the store and submit for review. Its secrets and variables are listed in
+  `store/README.md`.
 - `docs/` is the GitHub Pages site (homepage + privacy policy linked from the store listing and the
   OAuth consent screen). Keep `docs/privacy.html` accurate when changing what data is stored or sent.
 - Extension pages can't run inline scripts or load remote code (MV3 CSP) — keep everything bundled.

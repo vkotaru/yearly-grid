@@ -39,12 +39,55 @@ The screenshots come from `npm run dev` (sample data), so they show no real cale
      sign in and everyone re-signs every 7 days. Unverified apps in production show an "unverified
      app" screen once and are capped at 100 users — fine for an unlisted release.
 6. **Second upload.** `npm run package` again (now with the client ID) and upload it on the
-   *Package* tab. If the dashboard insists on a new version, bump `version` in both
-   `manifest.template.json` and `package.json` first.
+   *Package* tab. If the dashboard insists on a new version, `npm version patch` first (the
+   manifest takes its version from `package.json`).
 7. **Fill in the tabs** using the text below, set *Distribution → Visibility* to **Unlisted**, and
    *Submit for review*. Review usually takes a few days.
 8. **After approval**, install from the store link, sign in, and check the extension ID on
    `chrome://extensions` matches.
+
+## Releasing updates
+
+After the first release, pushing a version tag publishes automatically
+(`.github/workflows/release.yml`):
+
+```bash
+npm version patch          # 0.1.0 → 0.1.1: bumps package.json, commits, tags v0.1.1
+git push --follow-tags     # the tag starts the workflow
+```
+
+The workflow checks the tag matches `package.json`, runs the tests, builds the store zip, uploads
+it and submits it for review. Google still reviews every version; installs update within a few
+hours of approval. Pushes without a tag publish nothing. Watch a run under the repo's *Actions* tab.
+
+### One-time setup
+
+The workflow uses the [Chrome Web Store API](https://developer.chrome.com/docs/webstore/using-api)
+through [`chrome-webstore-upload-cli`](https://github.com/fregante/chrome-webstore-upload-cli).
+
+1. **Enable the API.** In the Google Cloud project whose consent screen is *In production*, enable
+   the *Chrome Web Store API*. (In a *Testing* project the refresh token expires after 7 days.)
+2. **Desktop OAuth client.** Google Auth Platform → *Clients* → *Create client* → type
+   **Desktop app**. Keep its client ID and client secret.
+3. **Refresh token.** On your own machine, run `npx chrome-webstore-upload-keys`, enter the client
+   ID and secret, and sign in with the Google account that owns the store listing. Approve the
+   *Chrome Web Store* scope (an "unverified app" warning is expected). It prints a refresh token.
+4. **Publisher ID.** It's in the Developer Dashboard URL when you're signed in
+   (`chrome.google.com/webstore/devconsole/<publisher-id>/…`).
+5. **GitHub.** Repo → *Settings* → *Secrets and variables* → *Actions*:
+
+   | Kind | Name | Value |
+   |---|---|---|
+   | Secret | `CWS_CLIENT_ID` | the Desktop client's ID |
+   | Secret | `CWS_CLIENT_SECRET` | the Desktop client's secret |
+   | Secret | `CWS_REFRESH_TOKEN` | the refresh token from step 3 |
+   | Variable | `EXTENSION_ID` | the store item ID |
+   | Variable | `PUBLISHER_ID` | from step 4 |
+   | Variable | `OAUTH_CLIENT_ID` | the *Chrome Extension* client ID (the one in your `.env`) |
+
+The refresh token can publish to your store listing, so keep it only in GitHub secrets. To revoke
+it, delete the Desktop client or remove the app at
+[myaccount.google.com/permissions](https://myaccount.google.com/permissions).
 
 ## Store listing tab
 
